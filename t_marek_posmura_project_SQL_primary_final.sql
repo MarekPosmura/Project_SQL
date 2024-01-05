@@ -55,10 +55,10 @@ FROM czechia_payroll cp
 	Finální použité roky jsou tedy 2006-2016. 
 */
 
-CREATE VIEW IF NOT EXISTS v_payroll_view AS
+CREATE OR REPLACE VIEW v_payroll_view AS
 SELECT
 	cpib.name AS industry_name,
-	round(avg(cp.value),0) AS avg_payroll,
+	round(avg(cp.value),0) AS avg_wage,
 	cp.payroll_year
 FROM czechia_payroll cp 
 LEFT JOIN czechia_payroll_industry_branch cpib
@@ -74,7 +74,7 @@ ORDER BY cp.industry_branch_code, cp.payroll_year
 
 -- -----------------------------------------------
 
-CREATE VIEW IF NOT EXISTS v_prices_view AS
+CREATE OR REPLACE VIEW v_prices_view AS
 SELECT
 	cpc.name AS product,
 	round(avg(cp.value),2) AS price,
@@ -90,12 +90,12 @@ GROUP BY
 
 -- -----------------------------------------------
 
-CREATE TABLE IF NOT EXISTS t_marek_posmura_project_SQL_primary_finale AS
+CREATE OR REPLACE TABLE t_marek_posmura_project_SQL_primary_finale AS
 SELECT
 	vpr.product,
 	vpr.price,
 	vpa.industry_name,
-	vpa.avg_payroll,
+	vpa.avg_wage,
 	vpa.payroll_year AS compared_year
 FROM v_prices_view vpr
 LEFT JOIN v_payroll_view vpa 
@@ -103,10 +103,27 @@ LEFT JOIN v_payroll_view vpa
 ORDER BY vpr.product, vpa.payroll_year, vpa.industry_name 
 
 
+-- ------------------------------------------------
+-- pokus alternativní tvorbu primární tabulky (není hotovo)
 
-
-
-
+SELECT 
+	cpc.name AS product,
+	round(AVG(cp.value),2) AS price,
+	cpib.name AS industry,
+	cp2.value AS average_wage,
+	YEAR(cp.date_from),
+	cp2.payroll_year 
+FROM czechia_price cp 
+LEFT JOIN czechia_payroll cp2 
+	ON YEAR(cp.date_from) = cp2.payroll_year 
+	AND cp2.value_type_code = 5958
+	AND cp.region_code IS NULL 
+	AND YEAR(cp.date_from) BETWEEN 2006 AND 2016
+LEFT JOIN czechia_price_category cpc 
+	ON cpc.code = cp.category_code 
+LEFT JOIN czechia_payroll_industry_branch cpib 
+	ON cpib.code = cp2.industry_branch_code
+GROUP BY cpc.name, cpib.name, cp2.value, cp2.payroll_year 
 
 
 
