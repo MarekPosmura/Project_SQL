@@ -10,31 +10,6 @@ czechia_price
 5958	Průměrná hrubá mzda na zaměstnance
  */
 
--- u JOINu můžou byt použity podmínky AND atd, nahradí se tím WHERE
-  
-
-/* toto mi nejde sestavit, zkusím to pomocí views, pak se k tomu vrátím
-SELECT 
-	cpc.name AS product,
-	cp.value AS price,
-	cpib.name AS industry,
-	cp2.value AS average_wage,
-	YEAR(cp.date_from),
-	cp2.payroll_year 
-FROM czechia_price cp 
-LEFT JOIN czechia_payroll cp2 
-	ON YEAR(cp.date_from) = cp2.payroll_year 
-	AND cp2.value_type_code = 5958
-	AND cp.region_code IS NULL 
-LEFT JOIN czechia_price_category cpc 
-	ON cpc.code = cp.category_code 
-LEFT JOIN czechia_payroll_industry_branch cpib 
-	ON cpib.code = cp2.industry_branch_code
-
-	;
-	
-*/
-
 SELECT
 	max(date_from),
 	min(date_from)
@@ -54,6 +29,7 @@ FROM czechia_payroll cp
 	Tabulka czechia_price obsahuje údaje za roky 2006-2018.
 	Finální použité roky jsou tedy 2006-2016. 
 */
+-- A) první varianta za pomocí spojení dvou pohledů (5,472 záznamů)
 
 CREATE OR REPLACE VIEW v_payroll_view AS
 SELECT
@@ -103,28 +79,32 @@ LEFT JOIN v_payroll_view vpa
 ORDER BY vpr.product, vpa.payroll_year, vpa.industry_name 
 
 
--- ------------------------------------------------
--- pokus alternativní tvorbu primární tabulky (není hotovo)
 
-SELECT 
-	cpc.name AS product,
-	round(AVG(cp.value),2) AS price,
-	cpib.name AS industry,
-	cp2.value AS average_wage,
-	YEAR(cp.date_from),
-	cp2.payroll_year 
-FROM czechia_price cp 
-LEFT JOIN czechia_payroll cp2 
-	ON YEAR(cp.date_from) = cp2.payroll_year 
-	AND cp2.value_type_code = 5958
-	AND cp.region_code IS NULL 
-	AND YEAR(cp.date_from) BETWEEN 2006 AND 2016
-LEFT JOIN czechia_price_category cpc 
-	ON cpc.code = cp.category_code 
-LEFT JOIN czechia_payroll_industry_branch cpib 
-	ON cpib.code = cp2.industry_branch_code
-GROUP BY cpc.name, cpib.name, cp2.value, cp2.payroll_year 
+-- B) druhá varianta pokus bez použití pohledů (5,472 záznamů)
 
+CREATE OR REPLACE TABLE t2_marek_posmura_project_SQL_primary_finale AS
+SELECT *
+FROM (
+	SELECT 
+		cpc.name AS product,
+		round(AVG(cp.value),2) AS price,
+		cpib.name AS industry,
+		cp2.value AS average_wage,
+		cp2.payroll_year AS compared_year
+	FROM czechia_price cp 
+	LEFT JOIN czechia_payroll cp2 
+		ON YEAR(cp.date_from) = cp2.payroll_year 
+		AND cp2.value_type_code = 5958
+		AND cp.region_code IS NULL 
+		AND YEAR(cp.date_from) BETWEEN 2006 AND 2016
+	LEFT JOIN czechia_price_category cpc 
+		ON cpc.code = cp.category_code 
+	LEFT JOIN czechia_payroll_industry_branch cpib 
+		ON cpib.code = cp2.industry_branch_code
+	GROUP BY cpc.name, cpib.name, cp2.payroll_year
+) AS primary_table
+WHERE 1=1
+	AND industry IS NOT null
 
 
 

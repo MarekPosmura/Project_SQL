@@ -2,14 +2,10 @@
 
 -- první a poslední srovnávané období = první a podlední rok, tedy v letech 2006 a 2016
 
--- první varianta s použitím pohledů
 
-CREATE OR REPLACE VIEW v_product_view AS
-SELECT *
-FROM t_marek_posmura_project_sql_primary_finale tmp
-WHERE compared_year  = 2006
-	OR compared_year = 2016
- 	
+-- -----------------------------------------------------------------------
+-- A) varianta do jednoho dotazu bez použití pohledů
+
 
 SELECT 
 	product,
@@ -17,34 +13,33 @@ SELECT
 	compared_year,
 	round(avg(avg_wage),0) AS avg_wage_year,
 	floor(avg(avg_wage) / price) AS product_per_year -- funkce floor vrátí nějvětší celou hodnotu
-FROM v_product_view vpv 
+FROM 
+	(
+	SELECT *
+	FROM t_marek_posmura_project_sql_primary_finale tmp
+	WHERE 1=1
+		AND compared_year IN (2006, 2016)
+	) AS x
 WHERE product IN ('Chléb konzumní kmínový', 'Mléko polotučné pasterované')
 GROUP BY product, compared_year 
 
--- -----------------------------------------------------------------------
--- druhá varianta do jednoho dotazu bez použití pohledů
 
-SELECT *
-FROM
+-- -----------------------------------------------------------------------
+-- B) varianta do jednoho dotazu s použitím CTE (with)
+
+WITH draft_tabel AS
 	(
-	SELECT 
-		product,
-		price,
-		compared_year,
-		round(avg(avg_wage),0) AS avg_wage_year,
-		floor(avg(avg_wage) / price) AS product_per_year -- funkce floor vrátí nějvětší celou hodnotu
-	FROM 
-		(
-		SELECT *
-		FROM t_marek_posmura_project_sql_primary_finale tmp
-		WHERE
-			compared_year  = 2006
-			OR compared_year = 2016
-		) AS x
-	WHERE product IN ('Chléb konzumní kmínový', 'Mléko polotučné pasterované')
-	GROUP BY product, compared_year 
-	) AS y
-WHERE
-	compared_year  = 2006
-	OR compared_year = 2016
- 
+	SELECT *
+	FROM t_marek_posmura_project_sql_primary_finale tmp
+	WHERE 1=1
+		AND compared_year IN (2006, 2016)
+	)
+SELECT 
+	product,
+	price,
+	compared_year,
+	round(avg(avg_wage),0) AS avg_wage_year,
+	floor(avg(avg_wage) / price) AS product_per_year -- funkce floor vrátí nějvětší celou hodnotu
+FROM draft_tabel
+WHERE product IN ('Chléb konzumní kmínový', 'Mléko polotučné pasterované')
+GROUP BY product, compared_year 

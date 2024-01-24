@@ -4,88 +4,6 @@
 
 
 SELECT
-	round(avg(tmp.avg_wage),2) AS avg_avg_wage,
-	tmp.compared_year 
-FROM t_marek_posmura_project_sql_primary_finale tmp
-GROUP BY tmp.compared_year 
-
--- A) průměrný růst mezd (spojit s druhým dotazem B)
-
-SELECT
-	round(avg(tmp.avg_wage),2) AS avg_wage_all,
-	round(avg(tmp2.avg_wage),2) AS avg_wage_all_previous_year,
-	round(avg(tmp.avg_wage),2) - round(avg(tmp2.avg_wage),2) AS diff,
-	round(((avg(tmp.avg_wage) / avg(tmp2.avg_wage))-1)*100,2) AS wage_percentage_diff,
-	tmp.compared_year
-	FROM t_marek_posmura_project_sql_primary_finale tmp
-LEFT JOIN t_marek_posmura_project_sql_primary_finale tmp2
-	ON tmp.industry_name = tmp2.industry_name 
-	AND tmp.compared_year = tmp2.compared_year + 1 
-GROUP BY tmp.compared_year
-ORDER BY tmp.compared_year
-;
-
--- B) průměrný růst cen všech potravin
-
-SELECT 
-	round(avg(tmp.price),2) AS avg_price,
-	round(avg(tmp2.price),2) AS price_previous_year,
-	round((((avg(tmp.price)/avg(tmp2.price))-1)*100),2) as price_percentage_diff,
-	tmp.compared_year
-FROM t_marek_posmura_project_sql_primary_finale tmp
-LEFT JOIN t_marek_posmura_project_sql_primary_finale tmp2
-	ON tmp.product = tmp2.product 
-	AND tmp.compared_year = tmp2.compared_year + 1
-GROUP BY tmp.compared_year
-ORDER BY tmp.compared_year  
-
--- C) spojení A+B
-
-
-
-SELECT *
-	FROM
-	(
-	SELECT
-		round(avg(tmp.avg_wage),2) AS avg_wage_all,
-		round(avg(tmp2.avg_wage),2) AS avg_wage_all_previous_year,
-		round(avg(tmp.avg_wage),2) - round(avg(tmp2.avg_wage),2) AS diff,
-		round(avg(tmp.price),2) AS avg_price,
-		round(avg(tmp2.price),2) AS avg_price_previous_year,
-		round(((avg(tmp.avg_wage) / avg(tmp2.avg_wage))-1)*100,2) AS wage_percentage_diff,
-		round((((avg(tmp.price)/avg(tmp2.price))-1)*100),2) as price_percentage_diff,
-		tmp.compared_year
-	FROM t_marek_posmura_project_sql_primary_finale tmp
-	LEFT JOIN t_marek_posmura_project_sql_primary_finale tmp2
-		ON tmp.industry_name = tmp2.industry_name
-		AND tmp.product = tmp2.product 
-		AND tmp.compared_year = tmp2.compared_year + 1 
-	GROUP BY tmp.compared_year
-	ORDER BY tmp.compared_year
-) AS neco 
-WHERE wage_percentage_diff > 1
-
-
-SELECT
-	round(avg(tmp.avg_wage),2) AS avg_wage_all,
-	round(avg(tmp2.avg_wage),2) AS avg_wage_all_previous_year,
-	round(avg(tmp.avg_wage),2) - round(avg(tmp2.avg_wage),2) AS diff,
-	round(avg(tmp.price),2) AS avg_price,
-	round(avg(tmp2.price),2) AS avg_price_previous_year,
-	round(((avg(tmp.avg_wage) / avg(tmp2.avg_wage))-1)*100,2) AS wage_percentage_diff,
-	round((((avg(tmp.price)/avg(tmp2.price))-1)*100),2) as price_percentage_diff,
-	round(abs((((avg(tmp.avg_wage) / avg(tmp2.avg_wage))-1)*100) - (((avg(tmp.price)/avg(tmp2.price))-1)*100)),2) AS abs_diff,
-	tmp.compared_year
-FROM t_marek_posmura_project_sql_primary_finale tmp
-LEFT JOIN t_marek_posmura_project_sql_primary_finale tmp2
-	ON tmp.industry_name = tmp2.industry_name
-	AND tmp.product = tmp2.product 
-	AND tmp.compared_year = tmp2.compared_year + 1 
-GROUP BY tmp.compared_year
-ORDER BY tmp.compared_year
-;
-
-SELECT
 	*,
 	CASE
 		WHEN wage_percentage_diff - price_percentage_diff >= 10 THEN 1
@@ -105,7 +23,8 @@ SELECT
 	tmp.compared_year
 FROM t_marek_posmura_project_sql_primary_finale tmp
 LEFT JOIN t_marek_posmura_project_sql_primary_finale tmp2
-	ON tmp.industry_name = tmp2.industry_name
+	ON 1=1
+	AND tmp.industry_name = tmp2.industry_name
 	AND tmp.product = tmp2.product 
 	AND tmp.compared_year = tmp2.compared_year + 1 
 GROUP BY tmp.compared_year

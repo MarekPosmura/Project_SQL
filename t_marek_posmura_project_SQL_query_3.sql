@@ -19,7 +19,8 @@ FROM
 		round((((tmp.price/tmp2.price)-1)*100),2) as percentage_diff
 	FROM t_marek_posmura_project_sql_primary_finale tmp
 	LEFT JOIN t_marek_posmura_project_sql_primary_finale tmp2
-		ON tmp.product = tmp2.product 
+		ON 1=1
+		AND tmp.product = tmp2.product 
 		AND tmp.compared_year = tmp2.compared_year + 1
 	GROUP BY tmp.compared_year, tmp.product
 	ORDER BY tmp.product, tmp.compared_year  
@@ -28,7 +29,7 @@ GROUP BY product_x
 ORDER BY avg_percentage_diff
 ;
 	
--- dotaz na jednotlivé produkty, pouze měnit poslední WHERE klauzuli
+-- dotaz na průběh cen jednotlivých produktů (pouze měnit konkrétní "product_y" ve WHERE klauzuli)
 SELECT *
 FROM (
 	SELECT 
@@ -45,4 +46,6 @@ FROM (
 	GROUP BY tmp.compared_year, tmp.product
 	ORDER BY tmp.product, tmp.compared_year  
 ) AS y
-WHERE product_y = 'papriky'
+WHERE 1=1
+	AND previous_year IS NOT NULL
+	AND product_y = 'Papriky'
