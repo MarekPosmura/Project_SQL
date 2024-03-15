@@ -38,8 +38,21 @@ SELECT
 	product,
 	price,
 	compared_year,
-	round(avg(avg_wage),0) AS avg_wage_year,
-	floor(avg(avg_wage) / price) AS product_per_year -- funkce floor vrátí nějvětší celou hodnotu
+	-- round(avg(avg_wage),0) AS avg_wage_month,
+	round(avg((avg_wage)*12),0) AS avg_wage_year,
+	floor(avg(avg_wage)*12 / price) AS product_per_year -- funkce floor vrátí nějvětší celou hodnotu
 FROM draft_tabel
 WHERE product IN ('Chléb konzumní kmínový', 'Mléko polotučné pasterované')
 GROUP BY product, compared_year 
+
+
+
+
+
+
+
+
+
+
+
+
