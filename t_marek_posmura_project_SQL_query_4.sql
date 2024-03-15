@@ -31,5 +31,5 @@ GROUP BY tmp.compared_year
 ORDER BY tmp.compared_year
 ) AS z
 ORDER BY abs_diff DESC
-LIMIT 3
+-- LIMIT 3
 ;
