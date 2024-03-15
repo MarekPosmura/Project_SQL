@@ -1,3 +1,4 @@
+-- User name on Discord: marekp._
 
 /* Výzkumné otázky pro primární tabulku   
 1. Rostou v průběhu let mzdy ve všech odvětvích, nebo v některých klesají?
