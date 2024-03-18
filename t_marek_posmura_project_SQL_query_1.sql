@@ -25,7 +25,7 @@ FROM (
 ) AS first_query
 WHERE previous_year IS NOT NULL
 GROUP BY industry_name
-
+;
 
 -- B) varianta pomocí CTE (WITH)
 
@@ -76,6 +76,6 @@ FROM (
 ) AS first_query
 WHERE 1=1
 	AND previous_year IS NOT NULL
-	
+;	
 	
 	

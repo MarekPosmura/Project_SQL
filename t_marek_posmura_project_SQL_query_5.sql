@@ -58,7 +58,7 @@ SELECT *,
 FROM main
 WHERE 1=1
 	AND diff_gdp IS NOT NULL
-
+;
 
 	
 	
@@ -83,5 +83,6 @@ FROM t_marek_posmura_project_sql_secondary_final tmps
 LEFT JOIN t_marek_posmura_project_sql_secondary_final tmps2
 	ON tmps.compared_year = tmps2.compared_year + 1
 GROUP BY compared_year
-ORDER BY compared_year DESC 
+ORDER BY compared_year DESC
+; 
 */

@@ -5,11 +5,8 @@
 -- "jakostní víno bílé" je na seznamu pouze od roku 2015, starší údaje nejsou
 
 
-SELECT
-	product_x,
-	round(avg(percentage_diff),2) AS avg_percentage_diff
-FROM
-(
+
+WITH base as(
 	SELECT 
 		tmp.product AS product_x,
 		tmp.price,
@@ -24,14 +21,19 @@ FROM
 		AND tmp.compared_year = tmp2.compared_year + 1
 	GROUP BY tmp.compared_year, tmp.product
 	ORDER BY tmp.product, tmp.compared_year  
-) AS x
+)
+SELECT
+	product_x,
+	round(avg(percentage_diff),2) AS avg_percentage_diff
+FROM base
 GROUP BY product_x
 ORDER BY avg_percentage_diff
 ;
-	
+
+
 -- dotaz na průběh cen jednotlivých produktů (pouze měnit konkrétní "product_y" ve WHERE klauzuli)
-SELECT *
-FROM (
+	
+WITH base AS (
 	SELECT 
 		tmp.product AS product_y,
 		tmp.price,
@@ -45,7 +47,16 @@ FROM (
 		AND tmp.compared_year = tmp2.compared_year + 1
 	GROUP BY tmp.compared_year, tmp.product
 	ORDER BY tmp.product, tmp.compared_year  
-) AS y
+)
+SELECT *
+FROM base
 WHERE 1=1
 	AND previous_year IS NOT NULL
-	AND product_y = 'Papriky'
+	AND product_y = 'Papriky'	
+;	
+	
+	
+	
+	
+	
+	

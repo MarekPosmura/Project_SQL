@@ -3,14 +3,8 @@
 -- porovnat průměrné roční zdražení všech potravin a průměrné roční zvýšení mezd (mzdy všech odvětví)
 
 
-SELECT
-	*,
-	CASE
-		WHEN wage_percentage_diff - price_percentage_diff >= 10 THEN 1
-		ELSE 0
-	END AS is_bigger_then_10
-FROM
-(
+
+WITH base AS ( 
 SELECT
 	round(avg(tmp.avg_wage),2) AS avg_wage_all,
 	round(avg(tmp2.avg_wage),2) AS avg_wage_all_previous_year,
@@ -29,7 +23,14 @@ LEFT JOIN t_marek_posmura_project_sql_primary_finale tmp2
 	AND tmp.compared_year = tmp2.compared_year + 1 
 GROUP BY tmp.compared_year
 ORDER BY tmp.compared_year
-) AS z
+)
+SELECT
+	*,
+	CASE
+		WHEN wage_percentage_diff - price_percentage_diff >= 10 THEN 1
+		ELSE 0
+	END AS is_bigger_then_10
+FROM base
 ORDER BY abs_diff DESC
 -- LIMIT 3
 ;

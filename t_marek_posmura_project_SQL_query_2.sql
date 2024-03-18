@@ -22,7 +22,7 @@ FROM
 	) AS x
 WHERE product IN ('Chléb konzumní kmínový', 'Mléko polotučné pasterované')
 GROUP BY product, compared_year 
-
+;
 
 -- -----------------------------------------------------------------------
 -- B) varianta do jednoho dotazu s použitím CTE (with)
@@ -44,7 +44,7 @@ SELECT
 FROM draft_tabel
 WHERE product IN ('Chléb konzumní kmínový', 'Mléko polotučné pasterované')
 GROUP BY product, compared_year 
-
+;
 
 
 

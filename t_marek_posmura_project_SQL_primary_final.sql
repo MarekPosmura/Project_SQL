@@ -64,7 +64,7 @@ WHERE YEAR(date_from) BETWEEN 2006 AND 2016
 GROUP BY
 	cpc.name,
 	year(date_from)
-
+;
 -- -----------------------------------------------
 
 CREATE OR REPLACE TABLE t_marek_posmura_project_SQL_primary_finale AS
@@ -78,7 +78,7 @@ FROM v_prices_view vpr
 LEFT JOIN v_payroll_view vpa 
 	ON vpr.price_year = vpa.payroll_year
 ORDER BY vpr.product, vpa.payroll_year, vpa.industry_name 
-
+;
 
 
 -- B) druhá varianta pokus bez použití pohledů (5,472 záznamů)
@@ -106,6 +106,6 @@ FROM (
 ) AS primary_table
 WHERE 1=1
 	AND industry IS NOT null
-
+;
 
 

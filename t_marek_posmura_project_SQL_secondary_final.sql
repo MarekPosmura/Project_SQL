@@ -45,7 +45,7 @@ LEFT JOIN price_wage pw
 WHERE 1=1
 	AND mt.country = 'Czech republic'
 	AND mt.compared_year BETWEEN 2006 AND 2016 
-
+;
 
 
 
