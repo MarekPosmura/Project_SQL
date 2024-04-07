@@ -1,36 +1,40 @@
 -- 4. Existuje rok, ve kterém byl meziroční nárůst cen potravin výrazně vyšší než růst mezd (větší než 10 %)?
 
--- porovnat průměrné roční zdražení všech potravin a průměrné roční zvýšení mezd (mzdy všech odvětví)
-
-
-
-WITH base AS ( 
-SELECT
-	round(avg(tmp.avg_wage),2) AS avg_wage_all,
-	round(avg(tmp2.avg_wage),2) AS avg_wage_all_previous_year,
-	round(avg(tmp.avg_wage),2) - round(avg(tmp2.avg_wage),2) AS diff,
-	round(avg(tmp.price),2) AS avg_price,
-	round(avg(tmp2.price),2) AS avg_price_previous_year,
-	round(((avg(tmp.avg_wage) / avg(tmp2.avg_wage))-1)*100,2) AS wage_percentage_diff,
-	round((((avg(tmp.price)/avg(tmp2.price))-1)*100),2) as price_percentage_diff,
-	round(abs((((avg(tmp.avg_wage) / avg(tmp2.avg_wage))-1)*100) - (((avg(tmp.price)/avg(tmp2.price))-1)*100)),2) AS abs_diff,
-	tmp.compared_year
-FROM t_marek_posmura_project_sql_primary_finale tmp
-LEFT JOIN t_marek_posmura_project_sql_primary_finale tmp2
-	ON 1=1
-	AND tmp.industry_name = tmp2.industry_name
-	AND tmp.product = tmp2.product 
-	AND tmp.compared_year = tmp2.compared_year + 1 
-GROUP BY tmp.compared_year
-ORDER BY tmp.compared_year
+WITH first_query AS (
+	SELECT
+		tmp.compared_year,
+		tmp.industry_name,
+		round(avg(tmp.avg_wage),2) AS avg_wage_all,
+		tmp.product,
+		round(avg(tmp.price),2) AS avg_price_all
+	FROM t_marek_posmura_project_sql_primary_final tmp
+	GROUP BY tmp.compared_year
+),
+second_query AS (
+	SELECT 
+		compared_year,
+		avg_wage_all,
+		LAG(avg_wage_all) OVER (PARTITION BY industry_name ORDER BY compared_year) AS lag_avg_wage_all,
+		avg_price_all,
+		LAG(avg_price_all) OVER (PARTITION BY product ORDER BY compared_year) AS lag_avg_price_all
+	FROM first_query
+),
+third_query AS (
+	SELECT 
+		compared_year,
+		round((avg_wage_all - lag_avg_wage_all) / avg_wage_all * 100,2) AS wage_percentage_diff,
+		round((avg_price_all - lag_avg_price_all) / avg_price_all * 100,2) AS price_percentage_diff
+	FROM second_query
 )
 SELECT
-	*,
+	compared_year,
+	wage_percentage_diff,
+	price_percentage_diff,
+	price_percentage_diff - wage_percentage_diff AS abs_diff,
 	CASE
-		WHEN wage_percentage_diff - price_percentage_diff >= 10 THEN 1
+		WHEN price_percentage_diff - wage_percentage_diff >= 10 THEN 1
 		ELSE 0
 	END AS is_bigger_then_10
-FROM base
+FROM third_query
 ORDER BY abs_diff DESC
--- LIMIT 3
 ;
