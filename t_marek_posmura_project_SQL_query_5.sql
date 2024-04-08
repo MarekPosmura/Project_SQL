@@ -8,32 +8,78 @@
 -- vzrostou mzdy nebo ceny potravin v roce následujícím (opět např. o 5 %)?
 
 
-WITH base AS (
+WITH first_query AS (
 	SELECT
-		tmps.compared_year,
--- 		tmps2.GDP AS GDP_previous,
--- 		tmps.GDP AS GDP,
--- 		tmps3.GDP AS GDP_next,
-		round(100*(tmps.gdp - tmps2.gdp)/tmps2.gdp,2) AS diff_gdp,
+		tmp.compared_year,
+		LAG(tmp.GDP) OVER (PARTITION BY tmp.country ORDER BY tmp.compared_year) AS lag_GDP,
+		tmp.gdp,
+		LEAD(tmp.GDP) OVER (PARTITION BY tmp.country ORDER BY tmp.compared_year) AS lead_GDP,
+		LAG(tmp.avg_price) OVER (PARTITION BY tmp.country ORDER BY tmp.compared_year) AS lag_price,
+		tmp.avg_price AS price,
+		LEAD(tmp.avg_price) OVER (PARTITION BY tmp.country ORDER BY tmp.compared_year) AS lead_price,
+		LAG(tmp.avg_wage_all) OVER (PARTITION BY tmp.country ORDER BY tmp.compared_year) AS lag_wage,
+		tmp.avg_wage_all AS wage,
+		LEAD(tmp.avg_wage_all) OVER (PARTITION BY tmp.country ORDER BY tmp.compared_year) AS lead_wage
+	FROM t_marek_posmura_project_sql_secondary_final tmp
+	WHERE tmp.country = 'Czech Republic' 
+	GROUP BY compared_year
+	ORDER BY compared_year DESC
+)
+SELECT
+	compared_year,
+	round((gdp - lag_gdp) / gdp * 100,2) AS lag_gdp_diff,
+	round((price - lag_price) / price * 100,2) AS lag_price_diff,
+	round((price - lead_price) / price * 100,2) AS lead_price_diff,
+	round((wage - lag_wage) / wage * 100,2) AS lag_wage_diff,
+	round((wage - lead_wage) / wage * 100,2) AS lead_wage_diff
+FROM first_query
+
+SELECT
+		tmp.compared_year,
+		LAG(tmp.GDP) OVER (PARTITION BY tmp.country ORDER BY tmp.compared_year) AS lag_GDP,
+		tmp.gdp,
+		LEAD(tmp.GDP) OVER (PARTITION BY tmp.country ORDER BY tmp.compared_year) AS lead_GDP,
+		LAG(tmp.avg_price) OVER (PARTITION BY tmp.country ORDER BY tmp.compared_year) AS lag_price,
+		tmp.avg_price AS price,
+		LEAD(tmp.avg_price) OVER (PARTITION BY tmp.country ORDER BY tmp.compared_year) AS lead_price,
+		LAG(tmp.avg_wage_all) OVER (PARTITION BY tmp.country ORDER BY tmp.compared_year) AS lag_wage,
+		tmp.avg_wage_all AS wage,
+		LEAD(tmp.avg_wage_all) OVER (PARTITION BY tmp.country ORDER BY tmp.compared_year) AS lead_wage
+	FROM t_marek_posmura_project_sql_secondary_final tmp
+	WHERE tmp.country = 'Czech Republic' 
+	GROUP BY compared_year
+	ORDER BY compared_year DESC
+-- 		round(100*(tmps.gdp - tmps2.gdp)/tmps2.gdp,2) AS diff_gdp,
 --		round(100*(tmps.gdp - tmps3.gdp)/tmps3.gdp,2) AS diff_gdp_next, -- toto nebude potřeba
 -- 		tmps2.avg_price AS price_previous,
--- 		tmps.avg_price AS price,
--- 		tmps3.avg_price AS price_next,
-		round(100*(tmps.avg_price - tmps2.avg_price)/tmps2.avg_price,2) AS diff_price,
-		round(100*(tmps.avg_price - tmps3.avg_price)/tmps3.avg_price,2) AS diff_price_next,
+-- 		round(100*(tmp.avg_price - tmps2.avg_price)/tmps2.avg_price,2) AS diff_price,
+-- 		round(100*(tmp.avg_price - tmps3.avg_price)/tmps3.avg_price,2) AS diff_price_next
 -- 		tmps2.avg_wage_all AS wage_previous,
 -- 		tmps.avg_wage_all AS wage,
 -- 		tmps3.avg_wage_all AS wage_next,
-		round(100*(tmps.avg_wage_all - tmps2.avg_wage_all)/tmps2.avg_wage_all,2) AS diff_wage,
-		round(100*(tmps.avg_wage_all - tmps3.avg_wage_all)/tmps3.avg_wage_all,2) AS diff_wage_next
-	FROM t_marek_posmura_project_sql_secondary_final tmps
-	LEFT JOIN t_marek_posmura_project_sql_secondary_final tmps2
-		ON tmps.compared_year = tmps2.compared_year + 1
-	LEFT JOIN t_marek_posmura_project_sql_secondary_final tmps3
-		ON tmps.compared_year = tmps3.compared_year - 1 
+-- 		round(100*(tmps.avg_wage_all - tmps2.avg_wage_all)/tmps2.avg_wage_all,2) AS diff_wage,
+-- 		round(100*(tmps.avg_wage_all - tmps3.avg_wage_all)/tmps3.avg_wage_all,2) AS diff_wage_next
+
+
+
+	SELECT
+		tmp.compared_year,
+		LAG(tmp.GDP) OVER (PARTITION BY tmp.country ORDER BY tmp.compared_year) AS lag_GDP,
+		tmp.gdp,
+		LEAD(tmp.GDP) OVER (PARTITION BY tmp.country ORDER BY tmp.compared_year) AS lead_GDP,
+		LAG(tmp.avg_price) OVER (PARTITION BY tmp.country ORDER BY tmp.compared_year) AS lag_price,
+		tmp.avg_price AS price,
+		LEAD(tmp.avg_price) OVER (PARTITION BY tmp.country ORDER BY tmp.compared_year) AS lead_price,
+		LAG(tmp.avg_wage_all) OVER (PARTITION BY tmp.country ORDER BY tmp.compared_year) AS lag_wage,
+		tmp.avg_wage_all AS wage,
+		LEAD(tmp.avg_wage_all) OVER (PARTITION BY tmp.country ORDER BY tmp.compared_year) AS lead_wage
+	FROM t_marek_posmura_project_sql_secondary_final tmp
+	WHERE tmp.country = 'Czech Republic' 
 	GROUP BY compared_year
 	ORDER BY compared_year DESC
-),
+	
+	
+	),
 main AS (
 SELECT *,
 	CASE
@@ -61,28 +107,52 @@ WHERE 1=1
 ;
 
 	
-	
-	
--- stará varianta
-/*	
+WITH first_query as(
+	SELECT
+		tmp.compared_year,
+		tmp.gdp,
+		LEAD(tmp.GDP, 1) OVER (PARTITION BY tmp.country ORDER BY tmp.compared_year) AS lead_GDP,
+-- 		LEAD(tmp.GDP, 2) OVER (PARTITION BY tmp.country ORDER BY tmp.compared_year) AS lead_GDP2,
+		tmp.avg_price AS price,
+		LEAD(tmp.avg_price, 1) OVER (PARTITION BY tmp.country ORDER BY tmp.compared_year) AS lead_price,
+-- 		LEAD(tmp.avg_price, 2) OVER (PARTITION BY tmp.country ORDER BY tmp.compared_year) AS lead_price2,
+		tmp.avg_wage_all AS wage,
+		LEAD(tmp.avg_wage_all, 1) OVER (PARTITION BY tmp.country ORDER BY tmp.compared_year) AS lead_wage
+-- 		LEAD(tmp.avg_wage_all, 2) OVER (PARTITION BY tmp.country ORDER BY tmp.compared_year) AS lead_wage2
+	FROM t_marek_posmura_project_sql_secondary_final tmp
+	WHERE tmp.country = 'Czech Republic' 
+	GROUP BY compared_year
+	ORDER BY compared_year ASC
+),
+second_query AS (
+	SELECT
+		compared_year,
+		round((lead_GDP - gdp) / gdp * 100,2) AS lead_gdp_diff,
+		round((lead_price - price) / price * 100,2) AS lead_price_diff,
+		round((lead_wage - wage) / wage * 100,2) AS lead_wage_diff
+	FROM first_query
+)
 SELECT
-	tmps.compared_year,
-	tmps.GDP,
-	tmps2.GDP AS GDP_previous,
-	tmps.gdp - tmps2.gdp AS diff_gdp,
-	round(100*(tmps.gdp - tmps2.gdp)/tmps2.gdp,2) AS diff_gdp_perc,
-	tmps.avg_price,
-	tmps2.avg_price AS avg_price_previous,
-	tmps.avg_price - tmps2.avg_price AS diff_price,
-	round(100*(tmps.avg_price - tmps2.avg_price)/tmps2.avg_price,2) AS diff_price_perc,
-	tmps.avg_wage_all,
-	tmps2.avg_wage_all AS avg_wage_all_previous,
-	tmps.avg_wage_all - tmps2.avg_wage_all AS diff_wage,
-	round(100*(tmps.avg_wage_all - tmps2.avg_wage_all)/tmps2.avg_wage_all,2) AS diff_wage_perc
-FROM t_marek_posmura_project_sql_secondary_final tmps
-LEFT JOIN t_marek_posmura_project_sql_secondary_final tmps2
-	ON tmps.compared_year = tmps2.compared_year + 1
-GROUP BY compared_year
-ORDER BY compared_year DESC
-; 
-*/
+	*,
+	sum(lead_gdp_diff) OVER (ORDER BY compared_year) AS acc_gdp_sum,
+	sum(lead_price_diff) OVER (ORDER BY compared_year) AS acc_price_sum,
+	sum(lead_wage_diff) OVER (ORDER BY compared_year) AS acc_wage_sum
+FROM second_query
+
+
+
+	SELECT
+		tmp.compared_year,
+		tmp.gdp,
+		LEAD(tmp.GDP, 1) OVER (PARTITION BY tmp.country ORDER BY tmp.compared_year) AS lead_GDP,
+-- 		LEAD(tmp.GDP, 2) OVER (PARTITION BY tmp.country ORDER BY tmp.compared_year) AS lead_GDP2,
+		tmp.avg_price AS price,
+		LEAD(tmp.avg_price, 1) OVER (PARTITION BY tmp.country ORDER BY tmp.compared_year) AS lead_price,
+-- 		LEAD(tmp.avg_price, 2) OVER (PARTITION BY tmp.country ORDER BY tmp.compared_year) AS lead_price2,
+		tmp.avg_wage_all AS wage,
+		LEAD(tmp.avg_wage_all, 1) OVER (PARTITION BY tmp.country ORDER BY tmp.compared_year) AS lead_wage
+-- 		LEAD(tmp.avg_wage_all, 2) OVER (PARTITION BY tmp.country ORDER BY tmp.compared_year) AS lead_wage2
+	FROM t_marek_posmura_project_sql_secondary_final tmp
+	WHERE tmp.country = 'Czech Republic' 
+	GROUP BY compared_year
+	ORDER BY compared_year ASC
